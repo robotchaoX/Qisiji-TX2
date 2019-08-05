@@ -13,7 +13,7 @@
 #include <QMovie>
 
 extern bool key_detection;
-extern bool key_hegih;
+extern bool key_height;
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent),
@@ -172,14 +172,13 @@ void MainWindow::key_detect() {
         key_detection = false;
 
     }
-        if(key_hegih && detec==0)
-            key_hegih=false;
-    if(key_hegih && detec)
-    {
-        get_height = true;
-        key_hegih = false;
-        ui->label_5->show();
-        mov->start();
+    if (key_height && detec == 0)
+      key_height = false;
+    if (key_height && detec) {
+      get_height = true;
+      key_height = false;
+      ui->label_5->show();
+      mov->start();
         //QTimer::singleShot(200, this, SLOT(slotHideFinishedLabel()));
         QTime time;
         time.start();

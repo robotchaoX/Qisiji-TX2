@@ -50,7 +50,7 @@ extern int color_save ;
 extern int cloud_save ;
 
 bool key_detection = false;
-bool key_hegih = false;
+bool key_height = false;
 bool key_background = false;
 
 bool has_Color = false;

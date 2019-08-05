@@ -39,15 +39,11 @@
 #ifndef JETSONGPIO_H_
 #define JETSONGPIO_H_
 
-/****************************************************************
- * Constants
- ****************************************************************/
-
 #define SYSFS_GPIO_DIR "/sys/class/gpio"
 #define POLL_TIMEOUT (3 * 1000) /* 3 seconds */
 #define MAX_BUF 64
 
-typedef unsigned int jetsonGPIO;
+typedef unsigned int pinGPIONumber;
 typedef unsigned int pinDirection;
 typedef unsigned int pinValue;
 
@@ -60,7 +56,7 @@ enum pinValues {
   on = 1
 };
 
-// jetsonTK1GPIO??
+// jetsonTK1 GPIO??
 // enum jetsonGPIONumber {
 //  gpio57 = 57,   // J3A1 - Pin 50
 //  gpio160 = 160, // J3A2 - Pin 40
@@ -72,7 +68,7 @@ enum pinValues {
 //  gpio166 = 166  // J3A2 - Pin 58
 //};
 
-// jetsonTX1GPIO
+// jetsonTX1 GPIO
 // enum jetsonTX1GPIONumber {
 //  gpio36 = 36,   // J21 - Pin 32 - Unused - AO_DMIC_IN_CLK
 //  gpio37 = 37,   // J21 - Pin 16 - Unused - AO_DMIC_IN_DAT
@@ -82,46 +78,52 @@ enum pinValues {
 //  gpio186 = 186, // J21 - Pin 31 - Input  - GPIO9_MOTION_INT
 //  gpio187 = 187, // J21 - Pin 37 - Output - GPIO8_ALS_PROX_INT
 //  gpio219 = 219, // J21 - Pin 29 - Output - GPIO19_AUD_RST
-//
-//  //  自查都可用？？
-//  //  gpio162 = 162, // J21 - Pin11 - GPIO_GEN0 - UART #0 Request to Send
-//  //  gpio11 = 11,   // J21 - Pin12 - GPIO_GEN1 - Audio I2S #0 Clock
-//  //  gpio38 = 38,   // J21 - Pin13 - GPIO_GEN2 - Bidir  - Audio Code
-//  Interrupt
-//  //  gpio511 = 511, // J21 - Pin15 - GPIO_GEN3 - From GPIO Expander (P17)
-//  //  gpio37 = 37,   // J21 - Pin16 - GPIO_GEN4 - Unused
-//  //  gpio184 = 184, // J21 - Pin18 - GPIO_GEN5 - Input  - Modem Wake AP GPIO
-//  //  gpio510 = 510, // J21 - Pin22 - GPIO_GEN6 - From GPIO Epander (P16)
-//  //
-//  //  gpio219 = 219, // J21 - Pin29 - GPIO5     - Output - Audio Reset
-//  //  (1.8/3.3V) gpio186 = 186, // J21 - Pin31 - GPIO6     - Input  - Motion
-//  //  Interrupt (3.3V) gpio36 = 36,   // J21 - Pin32 - GPIO12    - Unused
-//  gpio63
-//  //  = 63,   // J21 - Pin33 - GPIO13    - Bidir  - AP Wake Bt GPIO gpio163 =
-//  //  163, // J21 - Pin36 - GPIO16    - UART #0 Clear to Send gpio8 = 8, //
-//  //  J21 - Pin35 - GPIO19    - Audio I2S #0 Left/Right Clock gpio9 = 9, //
-//  //  J21 - Pin38 - GPIO20    - Audio I2S #0 Data in gpio10 = 10,   // J21 -
-//  //  Pin40 - GPIO21    - Audio I2S #0 Data in gpio187 = 187, // J21 - Pin37 -
-//  //  GPIO26    - Output - (3.3V)
 //};
 
-// jetsonTX2GPIO
+// // jetsonTX2 GPIO 原装载板
+// enum jetsonTX2GPIONumber {
+//  gpio397 = 397, // J21 - Pin 13  - GPIO_GEN2 Audio Code Interrupt
+//  gpio389 = 389, // J21 - Pin 33  - GPIO13 AP Wake Bt GPIO
+//  gpio481 = 481, // J21 - Pin 18  - GPIO_GEN5 Modem Wake AP GPIO
+//  gpio398 = 398, // J21 - Pin 29  - GPIO5 Audio Reset (1.8/3.3V)
+//
+//};
+
+// jetsonTX2 GPIO 图为007载板
 enum jetsonTX2GPIONumber {
-  gpio397 = 397, // J21 - Pin 13  - GPIO_GEN2 Audio Code Interrupt
-  gpio389 = 389, // J21 - Pin 33  - GPIO13 AP Wake Bt GPIO
-  gpio481 = 481, // J21 - Pin 18  - GPIO_GEN5 Modem Wake AP GPIO
-  gpio398 = 398, // J21 - Pin 29  - GPIO5 Audio Reset (1.8/3.3V)
+  gpio388 = 388, //  Pin7  / GPIO8
+  gpio298 = 298, //  Pin8  / GPIO9
+  gpio480 = 480, //  Pin9  / GPIO_EXP0_INT
+  gpio486 = 486, //  Pin10 / GPIO_EXP1_INT
 
 };
 
-int gpioExport(jetsonGPIO gpio);
-int gpioUnexport(jetsonGPIO gpio);
-int gpioSetDirection(jetsonGPIO, pinDirection out_flag);
-int gpioSetValue(jetsonGPIO gpio, pinValue value);
-int gpioGetValue(jetsonGPIO gpio, unsigned int *value);
-int gpioSetEdge(jetsonGPIO gpio, char *edge);
-int gpioOpen(jetsonGPIO gpio);
-int gpioClose(int fileDescriptor);
-int gpioActiveLow(jetsonGPIO gpio, unsigned int value);
+class GPIO_Device {
+public:
+  pinGPIONumber gpio_Number;
+  //  unsigned int gpio_ID;
+  pinDirection gpio_Direction;
+  unsigned int gpio_Value; // gpioGetValue
+  //  pinValue gpio_Value; // gpioGetValue 的结果
+
+  char *gpio_Edge;
+  unsigned int gpio_ActiveLowValue;
+  int gpio_FileDescriptor;
+  char gpio_CommandBuffer[MAX_BUF];
+
+  GPIO_Device();
+  ~GPIO_Device();
+  int gpioSetGPIONumber(pinGPIONumber gpioX);
+  int gpioExport();
+  int gpioUnexport();
+  int gpioSetDirection(pinDirection direction);
+  int gpioGetDirection();
+  int gpioSetValue(pinValue setValue);
+  int gpioGetValue();
+  int gpioSetEdge(char *edge);
+  int gpioOpen();
+  int gpioClose();
+  int gpioActiveLow(bool activeLowValue);
+};
 
 #endif // JETSONGPIO_H_

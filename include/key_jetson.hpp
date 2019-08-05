@@ -1,23 +1,9 @@
-// g++ -Wall main.cpp key_jetson.cpp jetsonGPIO.c -o main
-// sudo ./main
-//  按键按,点亮LED
-// 按键IO需下拉，检测高电平
-
-// function / sysfs_gpio / Pin  / Name
-//--------------------------------------------------
-//    LED  ->  gpio398  / Pin29 / GPIO5     -- GND
-//    KEY1 ->  gpio397  / Pin13 / GPIO_GEN2 -- GND
-//    KEY2 ->  gpio389  / Pin33 / GPIO13    -- GND
-//    KEY3 ->  gpio481  / Pin18 / GPIO_GEN5 -- GND
-
 #ifndef KEY_JETSON_HPP
 #define KEY_JETSON_HPP
 
+#include "jetsonGPIO.hpp"
+
 // 定义引脚
-//#define LED1_id 398
-//#define KEY1_id 397
-//#define KEY2_id 389
-//#define KEY3_id 481
 // 常变量
 // const unsigned int  LED1_id 398
 // const unsigned int  KEY1_id 397
@@ -37,11 +23,31 @@
 // int KEY1_val,KEY2_val,KEY3_val;
 // gpioGetValue(KEY1, &KEY1_val);
 
-int key();
-int key_scan(int);
-int led(int);
-void delay_ms(int);
+class Key_GPIO : GPIO_Device {
+public:
+  unsigned int key_Number; // gpio序号的数值
+  //  unsigned int key_ID; // key1 key2 key3 的123序号
+  unsigned int key_Value; // gpioGetValue
+  //  pinValue gpio_Value; // gpioGetValue 的结果
+
+  Key_GPIO();
+  ~Key_GPIO();
+  int setKeyGPIONumber(pinGPIONumber keyGPIONumber);
+  //  void delay_ms(int);
+  int keyInit(pinGPIONumber keyGPIONumber);
+  int getKeyValue();
+  int keyClose();
+};
+
+//------------------------------------------------------------------------------
+// Key_GPIO key1; // key 对象
+// Key_GPIO key2;
+// Key_GPIO key3;
+// API
 int gpio_init();
-int gpio_close();
+// int keyInit();
+int key();        // 单次按键扫描
+int gpio_close(); // 析构时会自动调用，可不用
+// int keyClose(); // 析构时会自动调用，可不用
 
 #endif // KEY_JETSON_HPP

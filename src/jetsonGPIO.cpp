@@ -1,38 +1,52 @@
-// jetsonGPIO.cpp
-
 #include "jetsonGPIO.hpp"
-#include <errno.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fcntl.h>
 #include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+
+GPIO_Device::GPIO_Device() {
+
+  //  gpio_Number = 0;
+  //  unsigned int gpio_ID;
+  gpio_Direction = inputPin;
+  //  gpio_Value = 0; // gpioGetValue
+}
+GPIO_Device::~GPIO_Device() {
+  if (gpioOpen() >= 0) // 如果能打开gpio则说明仍在注册
+  {
+    gpioClose();
+    gpioUnexport(); // 注销gpio
+  }
+}
+
+// 设置gpio序号
+int GPIO_Device::gpioSetGPIONumber(pinGPIONumber gpioX) { gpio_Number = gpioX; }
 
 // 注册gpio
 // gpioExport
 // Export the given gpio to userspace;
 // Return: Success = 0 ; otherwise open file error
-int gpioExport(jetsonGPIO gpio) {
-  int fileDescriptor, length;
-  char commandBuffer[MAX_BUF];
-
-  fileDescriptor = open(SYSFS_GPIO_DIR "/export", O_WRONLY);
-  if (fileDescriptor < 0) {
+int GPIO_Device::gpioExport() {
+  int length;
+  gpio_FileDescriptor = open(SYSFS_GPIO_DIR "/export", O_WRONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioExport unable to open gpio%d", gpio);
+             "gpioExport unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
 
-  length = snprintf(commandBuffer, sizeof(commandBuffer), "%d", gpio);
-  if (write(fileDescriptor, commandBuffer, length) != length) {
+  length = snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer), "%d",
+                    gpio_Number);
+  if (write(gpio_FileDescriptor, gpio_CommandBuffer, length) != length) {
     perror("gpioExport");
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-  close(fileDescriptor);
-
+  close(gpio_FileDescriptor);
   return 0;
 }
 
@@ -40,132 +54,121 @@ int gpioExport(jetsonGPIO gpio) {
 // gpioUnexport
 // Unexport the given gpio from userspace
 // Return: Success = 0 ; otherwise open file error
-int gpioUnexport(jetsonGPIO gpio) {
-  int fileDescriptor, length;
-  char commandBuffer[MAX_BUF];
-
-  fileDescriptor = open(SYSFS_GPIO_DIR "/unexport", O_WRONLY);
-  if (fileDescriptor < 0) {
+int GPIO_Device::gpioUnexport() {
+  int length;
+  gpio_FileDescriptor = open(SYSFS_GPIO_DIR "/unexport", O_WRONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioUnexport unable to open gpio%d", gpio);
+             "gpioUnexport unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-
-  length = snprintf(commandBuffer, sizeof(commandBuffer), "%d", gpio);
-  if (write(fileDescriptor, commandBuffer, length) != length) {
+  length = snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer), "%d",
+                    gpio_Number);
+  if (write(gpio_FileDescriptor, gpio_CommandBuffer, length) != length) {
     perror("gpioUnexport");
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-  close(fileDescriptor);
+  close(gpio_FileDescriptor);
   return 0;
 }
 
 // 设置gpio方向，输入还是输出
-// gpioSetDirection
+// gpioSetDirection（inputPin:输入，outputPin:输出）
 // Set the direction of the GPIO pin
 // Return: Success = 0 ; otherwise open file error
-int gpioSetDirection(jetsonGPIO gpio, unsigned int out_flag) {
-  int fileDescriptor;
-  char commandBuffer[MAX_BUF];
-
-  snprintf(commandBuffer, sizeof(commandBuffer),
-           SYSFS_GPIO_DIR "/gpio%d/direction", gpio);
-
-  fileDescriptor = open(commandBuffer, O_WRONLY);
-  if (fileDescriptor < 0) {
+int GPIO_Device::gpioSetDirection(pinDirection direction) {
+  gpio_Direction = direction;
+  snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer),
+           SYSFS_GPIO_DIR "/gpio%d/direction", gpio_Number);
+  gpio_FileDescriptor = open(gpio_CommandBuffer, O_WRONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioSetDirection unable to open gpio%d", gpio);
+             "gpioSetDirection unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-
-  if (out_flag) {
-    if (write(fileDescriptor, "out", 4) != 4) {
+  if (direction) {
+    if (write(gpio_FileDescriptor, "out", 4) != 4) {
       perror("gpioSetDirection");
-      return fileDescriptor;
+      return gpio_FileDescriptor;
     }
   } else {
-    if (write(fileDescriptor, "in", 3) != 3) {
+    if (write(gpio_FileDescriptor, "in", 3) != 3) {
       perror("gpioSetDirection");
-      return fileDescriptor;
+      return gpio_FileDescriptor;
     }
   }
-  close(fileDescriptor);
+  close(gpio_FileDescriptor);
   return 0;
 }
+
+// 查询gpio方向
+int GPIO_Device::gpioGetDirection() { return gpio_Direction; }
 
 // 设置gpio引脚电平
 // gpioSetValue
 // Set the value of the GPIO pin to 1 or 0
 // Return: Success = 0 ; otherwise open file error
-int gpioSetValue(jetsonGPIO gpio, unsigned int value) {
-  int fileDescriptor;
-  char commandBuffer[MAX_BUF];
-
-  snprintf(commandBuffer, sizeof(commandBuffer), SYSFS_GPIO_DIR "/gpio%d/value",
-           gpio);
-
-  fileDescriptor = open(commandBuffer, O_WRONLY);
-  if (fileDescriptor < 0) {
+int GPIO_Device::gpioSetValue(unsigned int setValue) {
+  snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer),
+           SYSFS_GPIO_DIR "/gpio%d/value", gpio_Number);
+  gpio_FileDescriptor = open(gpio_CommandBuffer, O_WRONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioSetValue unable to open gpio%d", gpio);
+             "gpioSetValue unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-
-  if (value) {
-    if (write(fileDescriptor, "1", 2) != 2) {
+  if (setValue) {
+    if (write(gpio_FileDescriptor, "1", 2) != 2) {
       perror("gpioSetValue");
-      return fileDescriptor;
+      return gpio_FileDescriptor;
     }
   } else {
-    if (write(fileDescriptor, "0", 2) != 2) {
+    if (write(gpio_FileDescriptor, "0", 2) != 2) {
       perror("gpioSetValue");
-      return fileDescriptor;
+      return gpio_FileDescriptor;
     }
   }
-  close(fileDescriptor);
+  close(gpio_FileDescriptor);
   return 0;
 }
 
 // 读取gpio值
-// gpioGetValue
+// gpioGetValue, 结果写入 gpio_Value
 // Get the value of the requested GPIO pin ; value return is 0 or 1
 // Return: Success = 0 ; otherwise open file error
-int gpioGetValue(jetsonGPIO gpio, unsigned int *value) {
-  int fileDescriptor;
-  char commandBuffer[MAX_BUF];
+int GPIO_Device::gpioGetValue() {
+  unsigned int gpioValue;
   char ch;
-
-  snprintf(commandBuffer, sizeof(commandBuffer), SYSFS_GPIO_DIR "/gpio%d/value",
-           gpio);
-
-  fileDescriptor = open(commandBuffer, O_RDONLY);
-  if (fileDescriptor < 0) {
+  snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer),
+           SYSFS_GPIO_DIR "/gpio%d/value", gpio_Number);
+  gpio_FileDescriptor = open(gpio_CommandBuffer, O_RDONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioGetValue unable to open gpio%d", gpio);
+             "gpioGetValue unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    //    return gpio_FileDescriptor;
+    return -1;
   }
-
-  if (read(fileDescriptor, &ch, 1) != 1) {
+  if (read(gpio_FileDescriptor, &ch, 1) != 1) {
     perror("gpioGetValue");
-    return fileDescriptor;
+    //    return gpio_FileDescriptor;
+    return -1;
   }
-
   if (ch != '0') {
-    *value = 1;
+    gpio_Value = 1;
   } else {
-    *value = 0;
+    gpio_Value = 0;
   }
-
-  close(fileDescriptor);
-  return 0;
+  gpioValue = gpio_Value;
+  close(gpio_FileDescriptor);
+  return gpioValue;
 }
 
 // 设置中断的触发方式，
@@ -177,90 +180,79 @@ int gpioGetValue(jetsonGPIO gpio, unsigned int *value) {
 // Set the edge of the GPIO pin
 // Valid edges: 'none' 'rising' 'falling' 'both'
 // Return: Success = 0 ; otherwise open file error
-int gpioSetEdge(jetsonGPIO gpio, char *edge) {
-  int fileDescriptor;
-  char commandBuffer[MAX_BUF];
+int GPIO_Device::gpioSetEdge(char *edge) {
 
-  snprintf(commandBuffer, sizeof(commandBuffer), SYSFS_GPIO_DIR "/gpio%d/edge",
-           gpio);
+  snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer),
+           SYSFS_GPIO_DIR "/gpio%d/edge", gpio_Number);
 
-  fileDescriptor = open(commandBuffer, O_WRONLY);
-  if (fileDescriptor < 0) {
+  gpio_FileDescriptor = open(gpio_CommandBuffer, O_WRONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioSetEdge unable to open gpio%d", gpio);
+             "gpioSetEdge unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-
-  if (write(fileDescriptor, edge, strlen(edge) + 1) !=
+  if (write(gpio_FileDescriptor, edge, strlen(edge) + 1) !=
       ((int)(strlen(edge) + 1))) {
     perror("gpioSetEdge");
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-  close(fileDescriptor);
+  close(gpio_FileDescriptor);
   return 0;
 }
 
-// 中断监听
+// 中断监听??
 
-//
+// 打开gpio口
 // gpioOpen
 // Open the given pin for reading
 // Returns the file descriptor of the named pin
-int gpioOpen(jetsonGPIO gpio) {
-  int fileDescriptor;
-  char commandBuffer[MAX_BUF];
-
-  snprintf(commandBuffer, sizeof(commandBuffer), SYSFS_GPIO_DIR "/gpio%d/value",
-           gpio);
-
-  fileDescriptor = open(commandBuffer, O_RDONLY | O_NONBLOCK);
-  if (fileDescriptor < 0) {
+int GPIO_Device::gpioOpen() {
+  snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer),
+           SYSFS_GPIO_DIR "/gpio%d/value", gpio_Number);
+  gpio_FileDescriptor = open(gpio_CommandBuffer, O_RDONLY | O_NONBLOCK);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer), "gpioOpen unable to open gpio%d",
-             gpio);
+             gpio_Number);
     perror(errorBuffer);
   }
-  return fileDescriptor;
+  return gpio_FileDescriptor;
 }
 
-//
+// 关闭gpio口
 // gpioClose
 // Close the given file descriptor
-int gpioClose(int fileDescriptor) { return close(fileDescriptor); }
+int GPIO_Device::gpioClose() { return close(gpio_FileDescriptor); }
 
-// 低点平有效,当值为“1”时，“1”表示低电平，“0”表示高电平
+// 低点平有效
+// 当值为“1”时，“1”表示低电平，“0”表示高电平
 // gpioActiveLow
 // Set the active_low attribute of the GPIO pin to 1 or 0
 // Return: Success = 0 ; otherwise open file error
-int gpioActiveLow(jetsonGPIO gpio, unsigned int value) {
-  int fileDescriptor;
-  char commandBuffer[MAX_BUF];
-
-  snprintf(commandBuffer, sizeof(commandBuffer),
-           SYSFS_GPIO_DIR "/gpio%d/active_low", gpio);
-
-  fileDescriptor = open(commandBuffer, O_WRONLY);
-  if (fileDescriptor < 0) {
+int GPIO_Device::gpioActiveLow(bool activeLowValue) {
+  snprintf(gpio_CommandBuffer, sizeof(gpio_CommandBuffer),
+           SYSFS_GPIO_DIR "/gpio%d/active_low", gpio_Number);
+  gpio_FileDescriptor = open(gpio_CommandBuffer, O_WRONLY);
+  if (gpio_FileDescriptor < 0) {
     char errorBuffer[128];
     snprintf(errorBuffer, sizeof(errorBuffer),
-             "gpioActiveLow unable to open gpio%d", gpio);
+             "gpioActiveLow unable to open gpio%d", gpio_Number);
     perror(errorBuffer);
-    return fileDescriptor;
+    return gpio_FileDescriptor;
   }
-
-  if (value) {
-    if (write(fileDescriptor, "1", 2) != 2) {
+  if (activeLowValue) {
+    if (write(gpio_FileDescriptor, "1", 2) != 2) {
       perror("gpioActiveLow");
-      return fileDescriptor;
+      return gpio_FileDescriptor;
     }
   } else {
-    if (write(fileDescriptor, "0", 2) != 2) {
+    if (write(gpio_FileDescriptor, "0", 2) != 2) {
       perror("gpioActiveLow");
-      return fileDescriptor;
+      return gpio_FileDescriptor;
     }
   }
-  close(fileDescriptor);
+  close(gpio_FileDescriptor);
   return 0;
 }
