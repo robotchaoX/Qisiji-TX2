@@ -21,7 +21,7 @@ using namespace std;
 
 ////@formatter:off
 //    ---- I2C BUSS ----  ADS1115所在的i2c总线
-#define ADS1115_I2C_BUSS                0x01    // i2c-0 或 i2c-1
+#define ADS1115_I2C_BUSS                0x00    // i2c-0 或 i2c-1
 //    ---- I2C ADDRESS/BITS ----  ADS1115的i2c地址
 #define ADS1115_ADDRESS                 0x48    // 1001 000 (ADDR = GND)
 

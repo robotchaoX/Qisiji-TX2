@@ -18,16 +18,16 @@
 using namespace std;
 
 ADC_I2C_ADS1115::ADC_I2C_ADS1115() {
-  //  kI2CBus = 0x01;           // 默认ads1115所在的i2c总线，
-  //  I2CDevice_Address = 0x48; // 默认ads1115地址，
-  config = 0;                // 配置寄存器的配置值
-  configRegister = 0x01;     // 指向ads1115的配置寄存器
-  conversionRegister = 0x00; // 指向ads1115的转换寄存器
+    //  kI2CBus = 0x01;           // 默认ads1115所在的i2c总线，
+    //  I2CDevice_Address = 0x48; // 默认ads1115地址，
+    config = 0;                // 配置寄存器的配置值
+    configRegister = 0x01;     // 指向ads1115的配置寄存器
+    conversionRegister = 0x00; // 指向ads1115的转换寄存器
 }
 
 ADC_I2C_ADS1115::~ADC_I2C_ADS1115() {
-  if (i2c_status)
-    close_I2CDevice();
+    if (i2c_status)
+        close_I2CDevice();
 }
 
 //  // ADS1115 读取数据过程
@@ -51,106 +51,106 @@ ADC_I2C_ADS1115::~ADC_I2C_ADS1115() {
 // i2c初始化 默认i2c_bus=0 ， i2c_address=0x48
 int ADC_I2C_ADS1115::adc_i2c_init(unsigned int i2c_bus_ = 0,
                                   unsigned int i2c_address_ = 0x48) {
-  unsigned int adc_i2c_bus = i2c_bus_;
-  unsigned int adc_i2c_address = i2c_address_;
-  // 初始化i2c_bus和i2c_address
-  set_kI2CBus(adc_i2c_bus);
-  set_I2CDevice_Address(adc_i2c_address);
-  // 打开i2c
-  int i2c_err = open_I2CDevice();
-  if (i2c_err < 0) {
-    cout << "Open i2c Error: %d" << error << endl;
-    return error;
-  } else {
-    cout << "Successfully Open i2c ！\n"
-         << "adc_i2c_bus: " << hex << adc_i2c_bus << " , "
-         << "i2c_address: 0x" << hex << adc_i2c_address << endl;
-    return 0;
-  }
+    unsigned int adc_i2c_bus = i2c_bus_;
+    unsigned int adc_i2c_address = i2c_address_;
+    // 初始化i2c_bus和i2c_address
+    set_kI2CBus(adc_i2c_bus);
+    set_I2CDevice_Address(adc_i2c_address);
+    // 打开i2c
+    int i2c_err = open_I2CDevice();
+    if (i2c_err < 0) {
+        cout << "Open i2c Error: %d" << error << endl;
+        return error;
+    } else {
+        cout << "Successfully Open i2c ！\n"
+             << "adc_i2c_bus: " << hex << adc_i2c_bus << " , "
+             << "i2c_address: 0x" << hex << adc_i2c_address << endl;
+        return 0;
+    }
 }
 
 // 中间环节暂不可单独使用
 void ADC_I2C_ADS1115::configADCSingleEnded(int channel) {
 
-  config = ADS1115_REG_CONFIG_OS_SINGLE | ADS1115_REG_CONFIG_PGA_6_144V |
-           ADS1115_REG_CONFIG_MODE_SINGLE | ADS1115_REG_CONFIG_DR_128SPS |
-           ADS1115_REG_CONFIG_CMODE_TRAD | ADS1115_REG_CONFIG_CPOL_ACTV_LOW |
-           ADS1115_REG_CONFIG_CLAT_NONLAT | ADS1115_REG_CONFIG_CQUE_NONE;
+    config = ADS1115_REG_CONFIG_OS_SINGLE | ADS1115_REG_CONFIG_PGA_6_144V |
+             ADS1115_REG_CONFIG_MODE_SINGLE | ADS1115_REG_CONFIG_DR_128SPS |
+             ADS1115_REG_CONFIG_CMODE_TRAD | ADS1115_REG_CONFIG_CPOL_ACTV_LOW |
+             ADS1115_REG_CONFIG_CLAT_NONLAT | ADS1115_REG_CONFIG_CQUE_NONE;
 
-  switch (channel) {
-  case 0:
-    config |= ADS1115_REG_CONFIG_MUX_SINGLE_0;
-    break;
-  case 1:
-    config |= ADS1115_REG_CONFIG_MUX_SINGLE_1;
-    break;
-  case 2:
-    config |= ADS1115_REG_CONFIG_MUX_SINGLE_2;
-    break;
-  case 3:
-    config |= ADS1115_REG_CONFIG_MUX_SINGLE_3;
-    break;
-  default:
-    cout << "Give a channel between 0-3" << endl;
-  }
-  //  1.配置值写入配置寄存器
-  // configRegister配置寄存器，config配置的值 2byte
-  write_word_I2CDevice(configRegister, config);
+    switch (channel) {
+    case 0:
+        config |= ADS1115_REG_CONFIG_MUX_SINGLE_0;
+        break;
+    case 1:
+        config |= ADS1115_REG_CONFIG_MUX_SINGLE_1;
+        break;
+    case 2:
+        config |= ADS1115_REG_CONFIG_MUX_SINGLE_2;
+        break;
+    case 3:
+        config |= ADS1115_REG_CONFIG_MUX_SINGLE_3;
+        break;
+    default:
+        cout << "Give a channel between 0-3" << endl;
+    }
+    //  1.配置值写入配置寄存器
+    // configRegister配置寄存器，config配置的值 2byte
+    write_word_I2CDevice(configRegister, config);
 }
 
 // 仅适用于ads1115芯片
 int ADC_I2C_ADS1115::readADCSingleEndedValue(int channel = 0) {
-  int adcValue = 0;
-  unsigned char adcValueMSB;
-  unsigned char adcValueLSB;
-  configADCSingleEnded(channel);
-  usleep(135000);
+    int adcValue = 0;
+    unsigned char adcValueMSB;
+    unsigned char adcValueLSB;
+    configADCSingleEnded(channel);
+    usleep(135000);
 
-  //  2.读取转换寄存器的结果值
-  // conversionRegister转换寄存器，读取的转换结果2byte存到readBuf[]
-  read_word_I2CDevice(conversionRegister);
+    //  2.读取转换寄存器的结果值
+    // conversionRegister转换寄存器，读取的转换结果2byte存到readBuf[]
+    read_word_I2CDevice(conversionRegister);
 
-  adcValueMSB = readBuf[0]; // ADC值高八位MSB
-  adcValueLSB = readBuf[1]; // ADC值高八位MSB
-  adcValue = adcValueMSB << 8 | adcValueLSB;
-  return adcValue; // ADC转换的结果2byte
+    adcValueMSB = readBuf[0]; // ADC值高八位MSB
+    adcValueLSB = readBuf[1]; // ADC值高八位MSB
+    adcValue = adcValueMSB << 8 | adcValueLSB;
+    return adcValue; // ADC转换的结果2byte
 }
 
 float ADC_I2C_ADS1115::readADCSingleEndedVoltage(int channel = 0) {
-  int adcValue = 0;
-  float adcVoltage = 0;
-  // 配置的full-scale
-  float FullScale = 6.144; // positive full-scale(+FS) = 6.144
-                           // negative full-scale(-FS) = -6.144
-  adcValue = readADCSingleEndedValue(channel);
-  // 6.144为config配置的电压量程值，32767为2^15=32768
-  //      电压值范围adcVoltage   ：    寄存器值范围adcValue
-  // 超正限         >= +FS      ：       32767=0x7fff
-  // 正压    +FS/2^15V -- +FS   ： 0=0x0001  -- 32767=0x7fff （从小到大）
-  //  零             0V         ：          0=0x00
-  // 负压    -FS -- -FS/2^15V   ： 32768=0x8000 -- 65535=0xffff （从小到大）
-  // 超负限         <= -FS      ：       32768=0x8000
-  if (adcValue == 0x7fff) // 超正限
-    adcVoltage = FullScale * (0x7fff - 1) / 0x7fff;
-  else if (adcValue >= 0 && adcValue <= 0x7fff)        // 正压
-    adcVoltage = (float)FullScale * adcValue / 0x7fff; // 2^15=0x7fff=32767
-  else if (adcValue == 0x0000)                         // 零
-    adcVoltage = 0;
-  else if (adcValue >= 0x8000 && adcValue <= 0xffff) // 负压
-    adcVoltage = (float)FullScale * (adcValue - 0xffff - 1) /
-                 0x7fff;       // 1^16=0xffff=65535
-  else if (adcValue == 0x8000) // 超负限
-    adcVoltage = -FullScale;
-  else
-    adcVoltage = 0; // 异常值
+    int adcValue = 0;
+    float adcVoltage = 0;
+    // 配置的full-scale
+    float FullScale = 6.144; // positive full-scale(+FS) = 6.144
+                             // negative full-scale(-FS) = -6.144
+    adcValue = readADCSingleEndedValue(channel);
+    // 6.144为config配置的电压量程值，32767为2^15=32768
+    //      电压值范围adcVoltage   ：    寄存器值范围adcValue
+    // 超正限         >= +FS      ：       32767=0x7fff
+    // 正压    +FS/2^15V -- +FS   ： 0=0x0001  -- 32767=0x7fff （从小到大）
+    //  零             0V         ：          0=0x00
+    // 负压    -FS -- -FS/2^15V   ： 32768=0x8000 -- 65535=0xffff （从小到大）
+    // 超负限         <= -FS      ：       32768=0x8000
+    if (adcValue == 0x7fff) // 超正限
+        adcVoltage = FullScale * (0x7fff - 1) / 0x7fff;
+    else if (adcValue >= 0 && adcValue <= 0x7fff)          // 正压
+        adcVoltage = (float)FullScale * adcValue / 0x7fff; // 2^15=0x7fff=32767
+    else if (adcValue == 0x0000)                           // 零
+        adcVoltage = 0;
+    else if (adcValue >= 0x8000 && adcValue <= 0xffff) // 负压
+        adcVoltage = (float)FullScale * (adcValue - 0xffff - 1) /
+                     0x7fff;     // 1^16=0xffff=65535
+    else if (adcValue == 0x8000) // 超负限
+        adcVoltage = -FullScale;
+    else
+        adcVoltage = 0; // 异常值
 
-  return adcVoltage;
+    return adcVoltage;
 }
 
 // 关闭打开的i2c设备
 int ADC_I2C_ADS1115::adc_i2c_close() {
-  if (i2c_status)
-    close_I2CDevice();
+    if (i2c_status)
+        close_I2CDevice();
 }
 
 //------------------------------------------------------------------------------
@@ -158,46 +158,46 @@ ADC_I2C_ADS1115 ads1115; // ads1115对象
 
 // 初始化
 int get_angle_init() {
-  int init_error;
-  // 所用的I2C bus
-  // ads1115 的 I2C Address
-  unsigned int ads1115_i2c_bus = ADS1115_I2C_BUSS;
-  unsigned int ads1115_i2c_address = ADS1115_ADDRESS;
-  init_error = ads1115.adc_i2c_init(ads1115_i2c_bus, ads1115_i2c_address);
-  if (init_error < 0) {
-    printf("Init ads1115 Error: %d", init_error);
-    return -1;
-  } else {
-    printf("Init ads1115 Successfully！！\n ");
-    return 0;
-  }
+    int init_error;
+    // 所用的I2C bus
+    // ads1115 的 I2C Address
+    unsigned int ads1115_i2c_bus = ADS1115_I2C_BUSS;
+    unsigned int ads1115_i2c_address = ADS1115_ADDRESS;
+    init_error = ads1115.adc_i2c_init(ads1115_i2c_bus, ads1115_i2c_address);
+    if (init_error < 0) {
+        printf("Init ads1115 Error: %d", init_error);
+        return -1;
+    } else {
+        printf("Init ads1115 Successfully！！\n ");
+        return 0;
+    }
 }
 
 // 获取ADC转换的值
 int get_adc_value(int channel) {
-  int adc_value = 0;
-  adc_value = ads1115.readADCSingleEndedValue(channel);
-  return adc_value;
+    int adc_value = 0;
+    adc_value = ads1115.readADCSingleEndedValue(channel);
+    return adc_value;
 }
 
 // 获取ADC转换的电压值
 float get_adc_voltage(int channel) {
-  float adc_voltage = 0;
-  adc_voltage = ads1115.readADCSingleEndedVoltage(channel);
-  return adc_voltage;
+    float adc_voltage = 0;
+    adc_voltage = ads1115.readADCSingleEndedVoltage(channel);
+    return adc_voltage;
 }
 
 // channel 2
 //// 计算最终角度值,测量量为电阻量
 float get_angle(int channel) {
-  float adcResistanceValue;
-  float baffleAngle = 0;
-  float adcVoltage = 0;
-  adcVoltage = ads1115.readADCSingleEndedVoltage(channel);
-  // 1k-3k可变电阻12V供电，串联参考电阻753欧
-  adcResistanceValue = (12 - adcVoltage) / adcVoltage * 753;
-  baffleAngle = adcResistanceValue; // 电阻与角度函数关系
-  return baffleAngle;
+    float adcResistanceValue;
+    float baffleAngle = 0;
+    float adcVoltage = 0;
+    adcVoltage = ads1115.readADCSingleEndedVoltage(channel);
+    // 1k-3k可变电阻12V供电，串联参考电阻753欧
+    adcResistanceValue = (11.99 - adcVoltage) / adcVoltage * 753;
+    baffleAngle = (adcResistanceValue - 1000) / 2000 * 90; // 电阻与角度函数关系
+    return baffleAngle;
 }
 
 //// 计算最终角度值，测量量为电压
