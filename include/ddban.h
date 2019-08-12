@@ -48,15 +48,18 @@ class control {
     const float v = 1.0;
     const double angle_a = 40; /// dangbanyuzhixiande jiajiao
     const double angle_b = 30; /// shuipingmian yu zhixian de jiajiao
-    long long CAN_id;
-    const int CAN_dlc = 8;
+    // long long CAN_id;
+    unsigned int CAN_id;
+    // const int CAN_dlc = 8;
+    unsigned int CAN_dlc = 8;
     int count_r = 0;
     int count_l = 0;
 
     array<int, 8> CAN_data = {{0, 0, 0, 0, 0, 0, 0, 0}};
     array<int, 8> receive_data = {{0, 0, 0, 0, 0, 0, 0, 0}};
 
-    int receive_id;
+    // int receive_id;
+    unsigned int receive_id;
 };
 
 #endif // BOX_RUNTIME_VERTION_DDBAN_H
