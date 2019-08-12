@@ -6,12 +6,12 @@
 
 using namespace std;
 
-/*class can_jetson{
-public:
-    int can_init();
-    int can_closed();
-    int
-};*/
+// class can_jetson{
+// public:
+//    int can_init();
+//    int can_closed();
+//    int
+//};
 
 enum can_baudRate {
     baud_100k = 100000,

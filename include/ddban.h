@@ -12,7 +12,6 @@
 #include <fstream>
 #include <iostream>
 #include <mainwindow.h>
-#include <math.h>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -30,13 +29,11 @@ class control {
 
     void vertical_control(const vector<Point2f> &fallPoints_2D);
 
-    void traversal_control(vector<Point3f> &fallpoint_world,
-                           int height_of_basket, const int &symbol_step,
+    void traversal_control(vector<Point3f> &fallpoint_world, int height_of_basket, const int &symbol_step,
                            MainWindow &w, const int &fall_step);
 
     void receive_control();
-    void vertical_control_Vision(const vector<Point2f> &fallPoints_2D,
-                                 const vector<Point3f> &box_UPworld,
+    void vertical_control_Vision(const vector<Point2f> &fallPoints_2D, const vector<Point3f> &box_UPworld,
                                  const int &x_axisFallPoint);
 
     void can_state();

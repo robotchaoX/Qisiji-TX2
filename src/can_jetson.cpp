@@ -1,4 +1,4 @@
-//  // jetsonTX2 GPIO 原装载板
+// jetsonTX2 GPIO 原装载板
 //    CAN口  ->  Signal     J26接口    CAN收发器
 //----------------------------------------------
 //    CAN0  ->  CAN0_RX  ->  Pin5   ->  RX
